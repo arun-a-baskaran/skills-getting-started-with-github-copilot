@@ -12,25 +12,31 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Clear loading message
       activitiesList.innerHTML = "";
+      activitySelect.innerHTML = '<option value="">-- Select an activity --</option>';
 
       // Populate activities list
       Object.entries(activities).forEach(([name, details]) => {
         const activityCard = document.createElement("div");
         activityCard.className = "activity-card";
 
-        const spotsLeft = details.max_participants - details.participants.length;
+        const participants = Array.isArray(details.participants) ? details.participants : [];
 
-        const participantItems = details.participants.length
-          ? details.participants.map(p => `<li>${p}</li>`).join("")
+        const spotsLeft = details.max_participants - participants.length;
+
+        const participantItems = participants.length
+          ? participants.map((p) => `<li class="participant-item">${p}</li>`).join("")
           : `<li class="no-participants">No participants yet – be the first!</li>`;
 
         activityCard.innerHTML = `
           <h4>${name}</h4>
           <p>${details.description}</p>
-          <p><strong>Schedule:</strong> ${details.schedule}</p>
-          <p><strong>Availability:</strong> ${spotsLeft} spots left</p>
+          <div class="activity-meta">
+            <p class="meta-row"><strong>Schedule:</strong> ${details.schedule}</p>
+            <p class="meta-row"><strong>Availability:</strong> ${spotsLeft} spots left</p>
+          </div>
           <div class="participants-section">
-            <p class="participants-title">Participants (${details.participants.length}/${details.max_participants}):</p>
+            <p class="participants-title">Signed Up Participants</p>
+            <p class="participants-subtitle">${participants.length} of ${details.max_participants} spots filled</p>
             <ul class="participants-list">${participantItems}</ul>
           </div>
         `;
@@ -68,11 +74,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (response.ok) {
         messageDiv.textContent = result.message;
-        messageDiv.className = "success";
+        messageDiv.className = "message success";
         signupForm.reset();
+        await fetchActivities();
       } else {
         messageDiv.textContent = result.detail || "An error occurred";
-        messageDiv.className = "error";
+        messageDiv.className = "message error";
       }
 
       messageDiv.classList.remove("hidden");
@@ -83,7 +90,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }, 5000);
     } catch (error) {
       messageDiv.textContent = "Failed to sign up. Please try again.";
-      messageDiv.className = "error";
+      messageDiv.className = "message error";
       messageDiv.classList.remove("hidden");
       console.error("Error signing up:", error);
     }
